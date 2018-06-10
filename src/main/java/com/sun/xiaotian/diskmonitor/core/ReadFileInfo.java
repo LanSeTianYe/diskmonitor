@@ -37,11 +37,11 @@ public class ReadFileInfo implements CommandLineRunner {
     @Autowired
     private DateFormatUtil dateFormatUtil;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(16);
+    private ExecutorService executorService = Executors.newFixedThreadPool(8);
 
-    private final BlockingQueue<FileBaseInfo> fileBaseInfoQueue = new LinkedBlockingDeque<>(18000);
+    private final BlockingQueue<FileBaseInfo> fileBaseInfoQueue = new LinkedBlockingDeque<>(16000);
 
-    private final BlockingQueue<FileSize> fileSizeQueue = new LinkedBlockingDeque<>(18000);
+    private final BlockingQueue<FileSize> fileSizeQueue = new LinkedBlockingDeque<>(16000);
 
     private Date date;
 
@@ -67,10 +67,10 @@ public class ReadFileInfo implements CommandLineRunner {
                 return 0;
             }
             long fileSize = Arrays.stream(files).mapToLong(this::getFileSie).count();
-            CompletableFuture.runAsync(() -> addFileInfo(file, fileSize), executorService);
+            addFileInfo(file, fileSize);
             return fileSize;
         } else {
-            CompletableFuture.runAsync(() -> addFileInfo(file, file.length()), executorService);
+            addFileInfo(file, file.length());
             return file.length();
         }
     }
@@ -82,13 +82,13 @@ public class ReadFileInfo implements CommandLineRunner {
             fileBaseInfo.setFileId(file.getAbsolutePath());
             fileBaseInfo.setFilePath(file.getPath());
             fileBaseInfo.setDirectory(file.isDirectory());
-            fileBaseInfo.setRecordDate(dateFormatUtil.format(date));
+            fileBaseInfo.setRecordDate(date);
             fileBaseInfoQueue.put(fileBaseInfo);
 
             FileSize fileSize = new FileSize();
             fileSize.setFileBaseInfoId(file.getAbsolutePath());
             fileSize.setFileSize(size);
-            fileSize.setRecordDate(dateFormatUtil.format(date));
+            fileSize.setRecordDate(date);
             fileSizeQueue.put(fileSize);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
