@@ -1,6 +1,8 @@
 package com.sun.xiaotian.diskmonitor.core;
 
 
+import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -10,7 +12,7 @@ import java.util.List;
 
 public class FileTool {
 
-    private static final List<FileData> fileDataList = new ArrayList<>();
+    private static final List<FileBaseInfo> fileDataList = new ArrayList<>();
 
     public void getAllFile(Path path) throws IOException {
         addFile(path);
@@ -33,10 +35,8 @@ public class FileTool {
 
     public void addFile(Path path) {
         File file = path.toFile();
-        FileData fileData = new FileData();
-        fileData.setId(file.getAbsolutePath());
+        FileBaseInfo fileData = new FileBaseInfo();
         fileData.setFileName(file.getName());
-        fileData.setFileSize(file.length());
         System.out.println(fileData);
         fileDataList.add(fileData);
     }
