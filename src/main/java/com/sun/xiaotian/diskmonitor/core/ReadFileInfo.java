@@ -1,6 +1,5 @@
 package com.sun.xiaotian.diskmonitor.core;
 
-
 import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
 import com.sun.xiaotian.diskmonitor.repository.FileBaseInfoRepository;
@@ -16,8 +15,12 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 读取文件信息
@@ -34,7 +37,15 @@ public class ReadFileInfo implements CommandLineRunner {
     @Autowired
     private DateFormatUtil dateFormatUtil;
 
-    private final Date date = new Date();
+    private ExecutorService executorService = Executors.newFixedThreadPool(16);
+
+    private final BlockingQueue<FileBaseInfo> fileBaseInfoQueue = new LinkedBlockingDeque<>(18000);
+
+    private final BlockingQueue<FileSize> fileSizeQueue = new LinkedBlockingDeque<>(18000);
+
+    private Date date;
+
+    private final AtomicInteger insertCount = new AtomicInteger(0);
 
     private final static Logger logger = LogManager.getLogger(ReadFileInfo.class);
 
@@ -43,41 +54,70 @@ public class ReadFileInfo implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Arrays.asList(filePathList.split(",")).forEach(System.out::println);
-        Arrays.asList(filePathList.split(",")).stream().map(Paths::get).map(Path::toFile).forEach(this::getFileSie);
+        date = dateFormatUtil.format(new Date());
+        consumer(8);
+        Arrays.asList(filePathList.split(",")).forEach(logger::info);
+        Arrays.stream(filePathList.split(",")).map(Paths::get).map(Path::toFile).forEach(this::getFileSie);
     }
 
     public long getFileSie(File file) {
-        if(file.isDirectory()) {
-            if (null == file.listFiles()) { return 0; }
-
+        if (file.isDirectory()) {
             File[] files = file.listFiles();
-            long fileSize = 0;
-            for (int i = 0; i < files.length; i++) {
-                fileSize = fileSize + getFileSie(files[i]);
+            if (null == files) {
+                return 0;
             }
-            addFileInfo(file, fileSize);
+            long fileSize = Arrays.stream(files).mapToLong(this::getFileSie).count();
+            CompletableFuture.runAsync(() -> addFileInfo(file, fileSize), executorService);
             return fileSize;
         } else {
-            addFileInfo(file, file.length());
+            CompletableFuture.runAsync(() -> addFileInfo(file, file.length()), executorService);
             return file.length();
         }
     }
 
     private void addFileInfo(File file, long size) {
-        FileBaseInfo fileBaseInfo = new FileBaseInfo();
-        fileBaseInfo.setFileName(file.getName());
-        fileBaseInfo.setFileId(file.getAbsolutePath());
-        fileBaseInfo.setFilePath(file.getPath());
-        fileBaseInfo.setDirectory(file.isDirectory());
-        fileBaseInfo.setRecordDate(dateFormatUtil.format(date));
-        fileBaseInfoRepository.save(fileBaseInfo);
+        try {
+            FileBaseInfo fileBaseInfo = new FileBaseInfo();
+            fileBaseInfo.setFileName(file.getName());
+            fileBaseInfo.setFileId(file.getAbsolutePath());
+            fileBaseInfo.setFilePath(file.getPath());
+            fileBaseInfo.setDirectory(file.isDirectory());
+            fileBaseInfo.setRecordDate(dateFormatUtil.format(date));
+            fileBaseInfoQueue.put(fileBaseInfo);
 
-        FileSize fileSize = new FileSize();
-        fileSize.setFileBaseInfoId(file.getAbsolutePath());
-        fileSize.setFileSize(size);
-        fileSize.setRecordDate(dateFormatUtil.format(date));
-        fileSizeRepository.save(fileSize);
+            FileSize fileSize = new FileSize();
+            fileSize.setFileBaseInfoId(file.getAbsolutePath());
+            fileSize.setFileSize(size);
+            fileSize.setRecordDate(dateFormatUtil.format(date));
+            fileSizeQueue.put(fileSize);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
+    private void consumer(int count) {
+        for (int i = 0; i < count; i++) {
+            executorService.submit(() -> {
+                List<FileSize> fileSizeList = new ArrayList<>(2000);
+                List<FileBaseInfo> fileBaseInfoList = new ArrayList<>(2000);
+                while (true) {
+                    for (int j = 0; j < 2000; j++) {
+                        FileBaseInfo fileBaseInfo = fileBaseInfoQueue.poll();
+                        FileSize fileSize = fileSizeQueue.poll();
+                        if (null != fileSize) {
+                            fileSizeList.add(fileSize);
+                        }
+                        if (null != fileBaseInfo) {
+                            fileBaseInfoList.add(fileBaseInfo);
+                        }
+                    }
+                    fileSizeRepository.saveAll(fileSizeList);
+                    fileBaseInfoRepository.saveAll(fileBaseInfoList);
+                    logger.info(insertCount.addAndGet(fileSizeList.size()));
+                    fileSizeList.clear();
+                    fileBaseInfoList.clear();
+                }
+            });
+        }
+    }
 }
