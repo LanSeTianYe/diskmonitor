@@ -66,7 +66,7 @@ public class ReadFileInfo implements CommandLineRunner {
             if (null == files) {
                 return 0;
             }
-            long fileSize = Arrays.stream(files).mapToLong(this::getFileSie).count();
+            long fileSize = Arrays.stream(files).mapToLong(this::getFileSie).sum();
             addFileInfo(file, fileSize);
             return fileSize;
         } else {
