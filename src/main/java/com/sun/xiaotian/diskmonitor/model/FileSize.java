@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Entity
+@IdClass(FileSizeIdClass.class)
 @Table(
         name = "file_size",
         uniqueConstraints = @UniqueConstraint(columnNames = {"file_base_info_id", "record_date"})

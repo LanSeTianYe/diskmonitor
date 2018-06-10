@@ -1,8 +1,14 @@
 package com.sun.xiaotian.diskmonitor.core;
 
 
+import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
+import com.sun.xiaotian.diskmonitor.model.FileSize;
+import com.sun.xiaotian.diskmonitor.repository.FileBaseInfoRepository;
+import com.sun.xiaotian.diskmonitor.repository.FileSizeRepository;
+import com.sun.xiaotian.diskmonitor.util.DateFormatUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -11,12 +17,24 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * 读取文件信息
  */
 @Component
 public class ReadFileInfo implements CommandLineRunner {
+
+    @Autowired
+    private FileBaseInfoRepository fileBaseInfoRepository;
+
+    @Autowired
+    private FileSizeRepository fileSizeRepository;
+
+    @Autowired
+    private DateFormatUtil dateFormatUtil;
+
+    private final Date date = new Date();
 
     private final static Logger logger = LogManager.getLogger(ReadFileInfo.class);
 
@@ -31,27 +49,35 @@ public class ReadFileInfo implements CommandLineRunner {
 
     public long getFileSie(File file) {
         if(file.isDirectory()) {
-            long fileSize = 0;
+            if (null == file.listFiles()) { return 0; }
+
             File[] files = file.listFiles();
-            if (null == files) {
-                return 0;
-            }
+            long fileSize = 0;
             for (int i = 0; i < files.length; i++) {
                 fileSize = fileSize + getFileSie(files[i]);
             }
-            logger.info(String.format("fileName: %s, fileSize: %s kb", file.getAbsolutePath(), fileSize / 1024));
+            addFileInfo(file, fileSize);
             return fileSize;
         } else {
-            logger.info(String.format("fileName: %s, fileSize: %s kb", file.getAbsolutePath(), file.length() / 1024));
+            addFileInfo(file, file.length());
             return file.length();
         }
     }
 
-    private void addFile() {
+    private void addFileInfo(File file, long size) {
+        FileBaseInfo fileBaseInfo = new FileBaseInfo();
+        fileBaseInfo.setFileName(file.getName());
+        fileBaseInfo.setFileId(file.getAbsolutePath());
+        fileBaseInfo.setFilePath(file.getPath());
+        fileBaseInfo.setDirectory(file.isDirectory());
+        fileBaseInfo.setRecordDate(dateFormatUtil.format(date));
+        fileBaseInfoRepository.save(fileBaseInfo);
 
+        FileSize fileSize = new FileSize();
+        fileSize.setFileBaseInfoId(file.getAbsolutePath());
+        fileSize.setFileSize(size);
+        fileSize.setRecordDate(dateFormatUtil.format(date));
+        fileSizeRepository.save(fileSize);
     }
 
-    private void addFileSize() {
-
-    }
 }
