@@ -39,9 +39,9 @@ public class ReadFileInfo implements CommandLineRunner {
 
     private ExecutorService executorService = Executors.newFixedThreadPool(8);
 
-    private final BlockingQueue<FileBaseInfo> fileBaseInfoQueue = new LinkedBlockingDeque<>(16000);
+    private BlockingQueue<FileBaseInfo> fileBaseInfoQueue;
 
-    private final BlockingQueue<FileSize> fileSizeQueue = new LinkedBlockingDeque<>(16000);
+    private BlockingQueue<FileSize> fileSizeQueue;
 
     private Date date;
 
@@ -52,9 +52,19 @@ public class ReadFileInfo implements CommandLineRunner {
     @Value("${filePathList}")
     private String filePathList;
 
+    @Value("${blockQueueSize}")
+    private int blockQueueSize;
+
+    @Value("${bathInsertSize}")
+    private int bathInsertSize;
+
     @Override
     public void run(String... args) throws Exception {
         date = dateFormatUtil.format(new Date());
+        fileBaseInfoQueue = new LinkedBlockingDeque<>(blockQueueSize);
+        fileSizeQueue = new LinkedBlockingDeque<>(blockQueueSize);
+
+
         consumer(8);
         Arrays.asList(filePathList.split(",")).forEach(logger::info);
         Arrays.stream(filePathList.split(",")).map(Paths::get).map(Path::toFile).forEach(this::getFileSie);
@@ -98,10 +108,10 @@ public class ReadFileInfo implements CommandLineRunner {
     private void consumer(int count) {
         for (int i = 0; i < count; i++) {
             executorService.submit(() -> {
-                List<FileSize> fileSizeList = new ArrayList<>(2000);
-                List<FileBaseInfo> fileBaseInfoList = new ArrayList<>(2000);
+                List<FileSize> fileSizeList = new ArrayList<>(bathInsertSize);
+                List<FileBaseInfo> fileBaseInfoList = new ArrayList<>(bathInsertSize);
                 while (true) {
-                    for (int j = 0; j < 2000; j++) {
+                    for (int j = 0; j < bathInsertSize; j++) {
                         FileBaseInfo fileBaseInfo = fileBaseInfoQueue.poll();
                         FileSize fileSize = fileSizeQueue.poll();
                         if (null != fileSize) {
