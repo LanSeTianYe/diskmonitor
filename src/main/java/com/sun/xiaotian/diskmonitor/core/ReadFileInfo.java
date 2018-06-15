@@ -1,9 +1,15 @@
 package com.sun.xiaotian.diskmonitor.core;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
-import com.sun.xiaotian.diskmonitor.repository.FileBaseInfoRepository;
-import com.sun.xiaotian.diskmonitor.repository.FileSizeRepository;
+import com.sun.xiaotian.diskmonitor.service.FileBaseInfoService;
+import com.sun.xiaotian.diskmonitor.service.FileSizeService;
 import com.sun.xiaotian.diskmonitor.util.DateFormatUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,22 +34,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class ReadFileInfo implements CommandLineRunner {
 
-    @Autowired
-    private FileBaseInfoRepository fileBaseInfoRepository;
+    private final Disruptor<FileBaseInfo> fileBaseInfoDisruptor = new Disruptor<>(new FileBaseInfoFactory(), 1 << 15, new ConsumeThreadFactory(), ProducerType.MULTI, new BlockingWaitStrategy());
+    private final Disruptor<FileSize> fileSizeDisruptor = new Disruptor<>(new FileSizeFactory(), 1 << 15, new ConsumeThreadFactory(), ProducerType.MULTI, new BlockingWaitStrategy());
 
-    @Autowired
-    private FileSizeRepository fileSizeRepository;
+    private RingBuffer<FileBaseInfo> fileBaseInfoRingBuffer;
+    private RingBuffer<FileSize> fileSizeRingBuffer;
 
-    @Autowired
-    private DateFormatUtil dateFormatUtil;
-
-    private ExecutorService executorService = Executors.newFixedThreadPool(8);
-
-    private BlockingQueue<FileBaseInfo> fileBaseInfoQueue;
-
-    private BlockingQueue<FileSize> fileSizeQueue;
-
-    private Date date;
+    private final Date date;
 
     private final AtomicInteger insertCount = new AtomicInteger(0);
 
@@ -52,20 +49,42 @@ public class ReadFileInfo implements CommandLineRunner {
     @Value("${filePathList}")
     private String filePathList;
 
-    @Value("${blockQueueSize}")
-    private int blockQueueSize;
-
     @Value("${bathInsertSize}")
     private int bathInsertSize;
 
+    private final FileBaseInfoService fileBaseInfoService;
+    private final FileSizeService fileSizeService;
+
+    @Autowired
+    public ReadFileInfo(FileBaseInfoService fileBaseInfoService, FileSizeService fileSizeService, DateFormatUtil dateFormatUtil) {
+        this.fileBaseInfoService = fileBaseInfoService;
+        this.fileSizeService = fileSizeService;
+        date = dateFormatUtil.format(new Date());
+        //
+
+        fileBaseInfoDisruptor.handleEventsWith(new EventHandler<FileBaseInfo>() {
+            @Override
+            public void onEvent(FileBaseInfo event, long sequence, boolean endOfBatch) throws Exception {
+                fileBaseInfoService.insert(event);
+            }
+        });
+
+        fileSizeDisruptor.handleEventsWith(new EventHandler<FileSize>() {
+            @Override
+            public void onEvent(FileSize event, long sequence, boolean endOfBatch) throws Exception {
+                fileSizeService.insert(event);
+            }
+        });
+
+        fileSizeDisruptor.start();
+        fileBaseInfoDisruptor.start();
+
+        fileBaseInfoRingBuffer = fileBaseInfoDisruptor.getRingBuffer();
+        fileSizeRingBuffer = fileSizeDisruptor.getRingBuffer();
+    }
+
     @Override
     public void run(String... args) throws Exception {
-        date = dateFormatUtil.format(new Date());
-        fileBaseInfoQueue = new LinkedBlockingDeque<>(blockQueueSize);
-        fileSizeQueue = new LinkedBlockingDeque<>(blockQueueSize);
-
-
-        consumer(8);
         Arrays.asList(filePathList.split(",")).forEach(logger::info);
         Arrays.stream(filePathList.split(",")).map(Paths::get).map(Path::toFile).forEach(this::getFileSie);
     }
@@ -77,6 +96,7 @@ public class ReadFileInfo implements CommandLineRunner {
                 return 0;
             }
             long fileSize = Arrays.stream(files).mapToLong(this::getFileSie).sum();
+            logger.info(String.format("file: %s, count: %s", file.getAbsolutePath(), insertCount.getAndIncrement()));
             addFileInfo(file, fileSize);
             return fileSize;
         } else {
@@ -86,48 +106,25 @@ public class ReadFileInfo implements CommandLineRunner {
     }
 
     private void addFileInfo(File file, long size) {
-        try {
-            FileBaseInfo fileBaseInfo = new FileBaseInfo();
-            fileBaseInfo.setFileName(file.getName());
-            fileBaseInfo.setFileId(file.getAbsolutePath());
-            fileBaseInfo.setFilePath(file.getPath());
-            fileBaseInfo.setDirectory(file.isDirectory());
-            fileBaseInfo.setRecordDate(date);
-            fileBaseInfoQueue.put(fileBaseInfo);
 
-            FileSize fileSize = new FileSize();
-            fileSize.setFileBaseInfoId(file.getAbsolutePath());
-            fileSize.setFileSize(size);
-            fileSize.setRecordDate(date);
-            fileSizeQueue.put(fileSize);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
+        fileBaseInfoRingBuffer.publishEvent(new EventTranslator<FileBaseInfo>() {
+            @Override
+            public void translateTo(FileBaseInfo fileBaseInfo, long sequence) {
+                fileBaseInfo.setFileName(file.getName());
+                fileBaseInfo.setFileId(file.getAbsolutePath());
+                fileBaseInfo.setFilePath(file.getPath());
+                fileBaseInfo.setDirectory(file.isDirectory());
+                fileBaseInfo.setRecordDate(date);
+            }
+        });
 
-    private void consumer(int count) {
-        for (int i = 0; i < count; i++) {
-            executorService.submit(() -> {
-                List<FileSize> fileSizeList = new ArrayList<>(bathInsertSize);
-                List<FileBaseInfo> fileBaseInfoList = new ArrayList<>(bathInsertSize);
-                while (true) {
-                    for (int j = 0; j < bathInsertSize; j++) {
-                        FileBaseInfo fileBaseInfo = fileBaseInfoQueue.poll();
-                        FileSize fileSize = fileSizeQueue.poll();
-                        if (null != fileSize) {
-                            fileSizeList.add(fileSize);
-                        }
-                        if (null != fileBaseInfo) {
-                            fileBaseInfoList.add(fileBaseInfo);
-                        }
-                    }
-                    fileSizeRepository.saveAll(fileSizeList);
-                    fileBaseInfoRepository.saveAll(fileBaseInfoList);
-                    logger.info(insertCount.addAndGet(fileSizeList.size()));
-                    fileSizeList.clear();
-                    fileBaseInfoList.clear();
-                }
-            });
-        }
+        fileSizeRingBuffer.publishEvent(new EventTranslator<FileSize>() {
+            @Override
+            public void translateTo(FileSize fileSize, long sequence) {
+                fileSize.setFileBaseInfoId(file.getAbsolutePath());
+                fileSize.setFileSize(size);
+                fileSize.setRecordDate(date);
+            }
+        });
     }
 }

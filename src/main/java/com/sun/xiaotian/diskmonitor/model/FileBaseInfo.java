@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "file_base_info")
-public class FileBaseInfo implements Serializable {
+public class FileBaseInfo implements Serializable, Cloneable {
 
     @Id
     @Column(name = "file_id")
@@ -28,4 +28,9 @@ public class FileBaseInfo implements Serializable {
     private boolean isDirectory;    //是否是目录
     @Column(name = "record_date")
     private Date recordDate;        //记录日期
+
+    @Override
+    public FileBaseInfo clone() throws CloneNotSupportedException {
+        return (FileBaseInfo) super.clone();
+    }
 }

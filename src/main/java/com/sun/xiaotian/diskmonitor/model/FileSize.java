@@ -3,6 +3,7 @@ package com.sun.xiaotian.diskmonitor.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Closeable;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -13,7 +14,7 @@ import java.util.Date;
         uniqueConstraints = @UniqueConstraint(columnNames = {"file_base_info_id", "record_date"})
 )
 @Data
-public class FileSize implements Serializable {
+public class FileSize implements Serializable, Cloneable {
 
     @Id
     @Column(name = "file_base_info_id")
@@ -24,4 +25,9 @@ public class FileSize implements Serializable {
 
     @Column(name = "file_size")
     private long fileSize;          //文件大小
+
+    @Override
+    public FileSize clone() throws CloneNotSupportedException {
+        return ((FileSize) super.clone());
+    }
 }

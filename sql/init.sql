@@ -6,9 +6,9 @@ DROP TABLE file_base_info;
 
 CREATE TABLE `file_base_info` (
   `file_id` VARCHAR(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_name` TEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `file_path` TEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `file_type` TEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_name` VARCHAR(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_path` VARCHAR(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_type` VARCHAR(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_directory` bit(1) DEFAULT NULL,
   `record_date` datetime DEFAULT NULL,
   PRIMARY KEY (`file_id`)
