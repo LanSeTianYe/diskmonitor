@@ -1,15 +1,11 @@
 package com.sun.xiaotian.diskmonitor.util;
 
-
-import org.springframework.stereotype.Component;
-
 import java.util.Calendar;
 import java.util.Date;
 
-@Component
 public class DateFormatUtil {
 
-    public Date format(Date date) {
+    public static Date format(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.MILLISECOND, 0);
