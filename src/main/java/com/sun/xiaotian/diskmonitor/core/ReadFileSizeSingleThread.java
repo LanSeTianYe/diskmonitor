@@ -10,8 +10,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -33,8 +31,7 @@ public class ReadFileSizeSingleThread implements CommandLineRunner {
 
     private int index = 0;
 
-    @Value("${filePathList}")
-    private String filePathList;
+    private File[] files;
 
     @Value("${bathInsertSize}")
     private int bathInsertSize;
@@ -42,16 +39,17 @@ public class ReadFileSizeSingleThread implements CommandLineRunner {
 
     public ReadFileSizeSingleThread() {
         date = DateFormatUtil.format(new Date());
+        files = File.listRoots();
     }
 
     @Override
     public void run(String... args) throws Exception {
-        Arrays.asList(filePathList.split(",")).forEach(logger::info);
+        Arrays.asList(files).forEach(logger::info);
         long start = System.currentTimeMillis();
-        Arrays.stream(filePathList.split(",")).map(Paths::get).map(Path::toFile).forEach(this::getFileSie);
-        logger.info("costTime:" + (System.currentTimeMillis() - start));
-        logger.info(String.format("index: %s", index));
-        System.out.println();
+//        Arrays.stream(files).forEach(this::getFileSie);
+//        logger.info("costTime:" + (System.currentTimeMillis() - start));
+//        logger.info(String.format("index: %s", index));
+//        System.out.println();
     }
 
     private long getFileSie(File file) {
@@ -72,15 +70,15 @@ public class ReadFileSizeSingleThread implements CommandLineRunner {
     private void addFileInfo(File file, long size) {
         FileBaseInfo fileBaseInfo = new FileBaseInfo();
         fileBaseInfo.setFileName(file.getName());
-        fileBaseInfo.setFileId(file.getAbsolutePath());
+        fileBaseInfo.setFileName(file.getAbsolutePath());
         fileBaseInfo.setFilePath(file.getPath());
         fileBaseInfo.setDirectory(file.isDirectory());
         fileBaseInfo.setRecordDate(date);
         fileBaseInfoList[index] = fileBaseInfo;
 
         FileSize fileSize = new FileSize();
-        fileSize.setFileBaseInfoId(file.getAbsolutePath());
         fileSize.setFileSize(size);
+        fileSize.setFileBaseInfoId(fileBaseInfo.getFileBaseInfoId());
         fileSize.setRecordDate(date);
         fileSizeList[index] = fileSize;
         index++;
