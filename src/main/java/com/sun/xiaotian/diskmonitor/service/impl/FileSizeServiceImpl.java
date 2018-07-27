@@ -17,7 +17,7 @@ public class FileSizeServiceImpl implements FileSizeService {
     }
 
     @Override
-    public int batchInsert(List<FileSize> fileSizeList) {
-        return fileSizeMapper.batchInsert(fileSizeList);
+    public void batchInsert(List<FileSize> fileSizeList) {
+        fileSizeMapper.batchInsert(fileSizeList);
     }
 }

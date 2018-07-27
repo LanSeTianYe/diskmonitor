@@ -22,5 +22,5 @@ public interface FileSizeMapper {
 
     int updateByPrimaryKey(FileSize record);
 
-    int batchInsert(List<FileSize> fileSizeList);
+    void batchInsert(List<FileSize> fileSizeList);
 }

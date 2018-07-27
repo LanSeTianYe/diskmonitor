@@ -36,7 +36,11 @@
     insert into dm_file_size (file_base_info_id, file_size, record_date)
     values
     <foreach collection="list" item="fileSize" index="index" separator=",">
-      (#{fileSize.fileBaseInfoId,jdbcType=BIGINT}, #{fileSize.fileSize,jdbcType=INTEGER}, #{fileSize.recordDate,jdbcType=TIMESTAMP})
+      (
+      #{fileSize.fileBaseInfoId,jdbcType=BIGINT},
+      #{fileSize.fileSize,jdbcType=INTEGER},
+      #{fileSize.recordDate,jdbcType=TIMESTAMP}
+      )
     </foreach>
   </insert>
 

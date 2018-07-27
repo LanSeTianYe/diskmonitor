@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface FileBaseInfoService {
 
-    public int batchInsert(List<FileBaseInfo> fileBaseInfoList);
+    public void batchInsert(List<FileBaseInfo> fileBaseInfoList);
 }

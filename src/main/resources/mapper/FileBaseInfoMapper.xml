@@ -15,7 +15,7 @@
     file_base_info_id, file_path, file_name, file_type, is_directory, record_date, file_absolute_path
   </sql>
 
-  <select id="selectByFileAbsolutePath" parameterType="java.lang.Long" resultMap="java.lang.String">
+  <select id="selectByFileAbsolutePath" parameterType="java.lang.String" resultType="java.lang.String">
     select
       file_absolute_path
     from dm_file_base_info
@@ -51,11 +51,10 @@
   </insert>
 
   <insert id="batchInsert" parameterType="com.sun.xiaotian.diskmonitor.model.FileBaseInfo" useGeneratedKeys="true" keyProperty="fileBaseInfoId">
-    insert into dm_file_base_info (file_base_info_id, file_path, file_name, file_type, is_directory, record_date, file_absolute_path)
+    insert into dm_file_base_info (file_path, file_name, file_type, is_directory, record_date, file_absolute_path)
     values
     <foreach collection="list" item="fileBaseInfo" index="index" separator=",">
       (
-      #{fileBaseInfo.fileBaseInfoId,jdbcType=BIGINT},
       #{fileBaseInfo.filePath,jdbcType=VARCHAR},
       #{fileBaseInfo.fileName,jdbcType=VARCHAR},
       #{fileBaseInfo.fileType,jdbcType=VARCHAR},

@@ -35,7 +35,8 @@ public class FileSizeServiceTest {
         first.setFileBaseInfoId(0l);
         first.setRecordDate(date);
         fileSizeList.add(first);
-        int insertCount = fileSizeService.batchInsert(fileSizeList);
-        Assert.assertEquals(insertCount, fileSizeList.size());
+
+        fileSizeService.batchInsert(fileSizeList);
+        Assert.assertNotNull(first.getFileSizeId());
     }
 }

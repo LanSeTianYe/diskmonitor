@@ -17,7 +17,7 @@ public class FileBaseInfoServiceImpl implements FileBaseInfoService {
     }
 
     @Override
-    public int batchInsert(List<FileBaseInfo> fileBaseInfoList) {
-        return fileBaseInfoMapper.batchInsert(fileBaseInfoList);
+    public void batchInsert(List<FileBaseInfo> fileBaseInfoList) {
+        fileBaseInfoMapper.batchInsert(fileBaseInfoList);
     }
 }

@@ -1,6 +1,7 @@
 package com.sun.xiaotian.diskmonitor.service;
 
 import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +53,7 @@ public class FileBaseInfoServiceTest {
         fileBaseInfo.setDirectory(false);
         fileBaseInfo.setRecordDate(date);
         fileBaseInfoList.add(fileBaseInfo);
-
-        int insertCount = fileBaseInfoService.batchInsert(fileBaseInfoList);
-
-        assertEquals(insertCount, fileBaseInfoList.size());
+        fileBaseInfoService.batchInsert(fileBaseInfoList);
+        Assert.assertNotNull(fileBaseInfo.getFileBaseInfoId());
     }
 }

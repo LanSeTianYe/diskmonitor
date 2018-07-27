@@ -17,11 +17,11 @@ public interface FileBaseInfoMapper {
 
     FileBaseInfo selectByPrimaryKey(Long fileBaseInfoId);
 
-    List<String> selectByFileAbsolutePath(@Param("absolutePaths") List<String> absulatePaths);
+    List<String> selectByFileAbsolutePath(@Param("absolutePaths") List<String> absolutePaths);
 
     int updateByPrimaryKeySelective(FileBaseInfo record);
 
     int updateByPrimaryKey(FileBaseInfo record);
 
-    int batchInsert(List<FileBaseInfo> fileBaseInfoList);
+    void batchInsert(List<FileBaseInfo> fileBaseInfoList);
 }
