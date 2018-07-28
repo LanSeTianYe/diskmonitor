@@ -1,0 +1,10 @@
+[00:13:08:827] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:28) - null
+[00:13:08:832] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:29) - sun.nio.fs.WindowsFileSystem@120ba90
+[00:13:08:832] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:30) - null
+[00:13:08:832] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:31) - c:\
+[00:13:08:833] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:33) - fileName: 
+[00:13:08:833] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:34) - fileParent: null
+[00:13:08:833] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:35) - length: 8192
+[00:13:08:835] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:36) - getUsableSpace: 74637635584
+[00:13:08:835] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:37) - getUsableSpace: 6741061632
+[00:13:08:835] [INFO] - com.sun.xiaotian.diskmonitor.core.FileTest.testFilePathSize(FileTest.java:38) - getFreeSpace: 6741061632
