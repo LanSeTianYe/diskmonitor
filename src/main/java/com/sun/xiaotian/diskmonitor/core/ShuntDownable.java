@@ -1,6 +1,6 @@
 package com.sun.xiaotian.diskmonitor.core;
 
-public interface ShuntDownAble {
+public interface ShuntDownable {
 
     /**
      * 结束任务

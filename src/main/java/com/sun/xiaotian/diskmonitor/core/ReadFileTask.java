@@ -1,42 +1,42 @@
 package com.sun.xiaotian.diskmonitor.core;
 
+import com.sun.xiaotian.diskmonitor.cache.OneClassOneCache;
+import com.sun.xiaotian.diskmonitor.factory.DMThreadFactory;
+import com.sun.xiaotian.diskmonitor.model.FileRecordDate;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
-import com.sun.xiaotian.diskmonitor.util.DateFormatUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * 读取文件信息任务
  */
 
 @Component
-public class ReadFileTask implements ShuntDownAble {
+public class ReadFileTask implements ShuntDownable {
 
     private static final Logger logger = LogManager.getLogger(ReadFileTask.class);
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable);
-            thread.setDaemon(false);
-            return thread;
-        }
-    });
-
-    private final Date date = DateFormatUtil.format(new Date());
+    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DMThreadFactory.getInstance());
 
     private FileInfoExchangeCenter fileInfoExchangeCenter;
 
+    private FileRecordDate recordDate;
+
+    private final OneClassOneCache oneClassOneCache;
+
+    public ReadFileTask(OneClassOneCache oneClassOneCache) {
+        this.oneClassOneCache = oneClassOneCache;
+    }
+
     void read(File file, FileInfoExchangeCenter fileInfoExchangeCenter) {
+        recordDate = oneClassOneCache.get(FileRecordDate.class);
         this.fileInfoExchangeCenter = fileInfoExchangeCenter;
         CompletableFuture
                 .runAsync(() -> {
@@ -48,10 +48,7 @@ public class ReadFileTask implements ShuntDownAble {
                             logger.error(throwable.getMessage(), throwable);
                             return null;
                         }
-                ).thenAccept((v) -> {
-                    logger.info("success ...");
-                }
-        );
+                ).thenAccept((v) -> logger.info("success ..."));
     }
 
     /**
@@ -86,7 +83,7 @@ public class ReadFileTask implements ShuntDownAble {
         FileSize fileSize = new FileSize();
         fileSize.setFileSize(size);
         fileSize.setFileAbsolutePath(file.getAbsolutePath());
-        fileSize.setRecordDate(date);
+        fileSize.setRecordDate(recordDate.getRecordDate());
         return fileSize;
     }
 

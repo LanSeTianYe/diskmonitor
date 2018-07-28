@@ -3,6 +3,7 @@ package com.sun.xiaotian.diskmonitor.service.impl;
 import com.sun.xiaotian.diskmonitor.model.FileRecordDate;
 import com.sun.xiaotian.diskmonitor.repository.FileRecordDateRepository;
 import com.sun.xiaotian.diskmonitor.service.FileRecordDateService;
+import com.sun.xiaotian.diskmonitor.util.DateFormatUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -17,9 +18,16 @@ public class FileRecordDateServiceImpl implements FileRecordDateService {
     }
 
     @Override
-    public void addFileRecordDate(Date recordDate) {
+    public FileRecordDate addFileRecordDate() {
         FileRecordDate fileRecordDate = new FileRecordDate();
-        fileRecordDate.setRecordDate(recordDate);
-        fileRecordDateRepository.save(fileRecordDate);
+        Date currDate = new Date();
+        fileRecordDate.setRecordDate(DateFormatUtil.format(currDate));
+        fileRecordDate.setStartDate(currDate);
+        return fileRecordDateRepository.save(fileRecordDate);
+    }
+
+    @Override
+    public FileRecordDate saveOrUpdate(FileRecordDate fileRecordDate) {
+        return fileRecordDateRepository.saveAndFlush(fileRecordDate);
     }
 }

@@ -1,6 +1,7 @@
 package com.sun.xiaotian.diskmonitor.core;
 
 
+import com.sun.xiaotian.diskmonitor.factory.DMThreadFactory;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
 import com.sun.xiaotian.diskmonitor.service.FileSizeService;
 import org.apache.logging.log4j.LogManager;
@@ -16,15 +17,11 @@ import java.util.concurrent.*;
  */
 
 @Component
-public class WriteFileSizeTask implements ShuntDownAble {
+public class WriteFileSizeTask implements ShuntDownable {
 
     private static final Logger logger = LogManager.getLogger(WriteFileSizeTask.class);
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), r -> {
-        Thread thread = new Thread(r);
-        thread.setDaemon(false);
-        return thread;
-    });
+    private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DMThreadFactory.getInstance());
 
     private final FileSizeService fileSizeService;
 

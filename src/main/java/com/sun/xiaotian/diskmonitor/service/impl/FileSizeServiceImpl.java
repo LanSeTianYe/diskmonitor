@@ -6,6 +6,7 @@ import com.sun.xiaotian.diskmonitor.service.FileSizeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -17,5 +18,10 @@ public class FileSizeServiceImpl implements FileSizeService {
     @Override
     public void saveAll(List<FileSize> fileSizeList) {
         fileSizeRepository.saveAll(fileSizeList);
+    }
+
+    @Override
+    public int findRecordCount(Date recordDate) {
+        return fileSizeRepository.countByRecordDateEquals(recordDate);
     }
 }

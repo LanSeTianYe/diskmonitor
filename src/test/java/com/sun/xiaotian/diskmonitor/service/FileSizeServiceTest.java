@@ -1,6 +1,7 @@
 package com.sun.xiaotian.diskmonitor.service;
 
 import com.sun.xiaotian.diskmonitor.model.FileSize;
+import com.sun.xiaotian.diskmonitor.util.DateFormatUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,5 +35,11 @@ public class FileSizeServiceTest {
         fileSizeList.add(first);
         fileSizeService.saveAll(fileSizeList);
         Assert.assertNotNull(first.getFileSizeId());
+    }
+
+    @Test
+    public void countByRecordDate() {
+        int recordCount = fileSizeService.findRecordCount(DateFormatUtil.format(new Date()));
+        Assert.assertTrue(recordCount >= 0);
     }
 }
