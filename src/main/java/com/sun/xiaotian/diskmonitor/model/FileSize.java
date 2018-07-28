@@ -20,6 +20,7 @@ public class FileSize implements Serializable {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(nullable = false)
     private Integer fileSizeId;        //文件大小ID
+    @Column(length = 500)
     private String fileAbsolutePath;   //文件绝对路径
     private long fileSize;          //文件大小
     private Date recordDate;        //记录日期

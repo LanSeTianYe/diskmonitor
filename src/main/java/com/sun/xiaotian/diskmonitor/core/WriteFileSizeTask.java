@@ -1,6 +1,7 @@
 package com.sun.xiaotian.diskmonitor.core;
 
 
+import com.alibaba.fastjson.JSON;
 import com.sun.xiaotian.diskmonitor.factory.DMThreadFactory;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
 import com.sun.xiaotian.diskmonitor.service.FileSizeService;
@@ -37,6 +38,7 @@ public class WriteFileSizeTask implements ShuntDownable {
                             if(throwable == null) {
                                 return null;
                             }
+                            logger.error(JSON.toJSON(fileSizeList));
                             logger.error(throwable.getMessage(), throwable);
                             return null;
                         }
