@@ -24,19 +24,15 @@ public class FileSizeServiceTest {
         Date date = new Date();
         List<FileSize> fileSizeList = new ArrayList<>();
         FileSize first = new FileSize();
-        first.setFileBaseInfoId(0l);
         first.setRecordDate(date);
         fileSizeList.add(first);
         first = new FileSize();
-        first.setFileBaseInfoId(0l);
         first.setRecordDate(date);
         fileSizeList.add(first);
         first = new FileSize();
-        first.setFileBaseInfoId(0l);
         first.setRecordDate(date);
         fileSizeList.add(first);
-
-        fileSizeService.batchInsert(fileSizeList);
+        fileSizeService.saveAll(fileSizeList);
         Assert.assertNotNull(first.getFileSizeId());
     }
 }

@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface FileSizeService {
 
-    public void batchInsert(List<FileSize> fileSizeList);
+    void saveAll(List<FileSize> fileSizeList);
 }

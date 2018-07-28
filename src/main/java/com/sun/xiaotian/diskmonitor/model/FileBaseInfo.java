@@ -3,13 +3,19 @@ package com.sun.xiaotian.diskmonitor.model;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 
 @Data
 @Accessors
+@Entity
+@Table(name = "dm_file_base_info")
 public class FileBaseInfo implements Serializable {
-    private Long fileBaseInfoId;    //文件ID
+
+    @Id
     private String fileAbsolutePath;    //文件绝对路径
     private String filePath;        //文件路径
     private String fileName;        //文件名字

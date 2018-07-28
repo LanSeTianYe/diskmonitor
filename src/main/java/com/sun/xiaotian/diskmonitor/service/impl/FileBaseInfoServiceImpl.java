@@ -1,7 +1,7 @@
 package com.sun.xiaotian.diskmonitor.service.impl;
 
-import com.sun.xiaotian.diskmonitor.mapper.FileBaseInfoMapper;
 import com.sun.xiaotian.diskmonitor.model.FileBaseInfo;
+import com.sun.xiaotian.diskmonitor.repository.FileBaseInfoRepository;
 import com.sun.xiaotian.diskmonitor.service.FileBaseInfoService;
 import org.springframework.stereotype.Service;
 
@@ -10,14 +10,14 @@ import java.util.List;
 @Service
 public class FileBaseInfoServiceImpl implements FileBaseInfoService {
 
-    private final FileBaseInfoMapper fileBaseInfoMapper;
+    private final FileBaseInfoRepository fileBaseInfoRepository;
 
-    public FileBaseInfoServiceImpl(FileBaseInfoMapper fileBaseInfoMapper) {
-        this.fileBaseInfoMapper = fileBaseInfoMapper;
+    public FileBaseInfoServiceImpl(FileBaseInfoRepository fileBaseInfoRepository) {
+        this.fileBaseInfoRepository = fileBaseInfoRepository;
     }
 
     @Override
-    public void batchInsert(List<FileBaseInfo> fileBaseInfoList) {
-        fileBaseInfoMapper.batchInsert(fileBaseInfoList);
+    public void saveAll(List<FileBaseInfo> fileBaseInfoList) {
+        fileBaseInfoRepository.saveAll(fileBaseInfoList);
     }
 }

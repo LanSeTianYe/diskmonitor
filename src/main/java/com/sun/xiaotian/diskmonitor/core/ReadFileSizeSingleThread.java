@@ -78,7 +78,6 @@ public class ReadFileSizeSingleThread implements CommandLineRunner {
 
         FileSize fileSize = new FileSize();
         fileSize.setFileSize(size);
-        fileSize.setFileBaseInfoId(fileBaseInfo.getFileBaseInfoId());
         fileSize.setRecordDate(date);
         fileSizeList[index] = fileSize;
         index++;
