@@ -14,13 +14,13 @@ import java.util.Date;
 @Table(name = "dm_file_size")
 public class FileSize implements Serializable {
 
+    public final static FileSize END = new FileSize();
+
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(nullable = false)
     private Integer fileSizeId;        //文件大小ID
-
     private String fileAbsolutePath;   //文件绝对路径
-
     private long fileSize;          //文件大小
     private Date recordDate;        //记录日期
 }

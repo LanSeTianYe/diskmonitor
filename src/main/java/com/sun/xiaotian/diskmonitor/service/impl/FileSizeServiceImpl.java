@@ -3,6 +3,7 @@ package com.sun.xiaotian.diskmonitor.service.impl;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
 import com.sun.xiaotian.diskmonitor.repository.FileSizeRepository;
 import com.sun.xiaotian.diskmonitor.service.FileSizeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,14 +11,11 @@ import java.util.List;
 @Service
 public class FileSizeServiceImpl implements FileSizeService {
 
-    private final FileSizeRepository fileSizeRepositorye;
-
-    public FileSizeServiceImpl(FileSizeRepository fileSizeRepositorye) {
-        this.fileSizeRepositorye = fileSizeRepositorye;
-    }
+    @Autowired
+    private FileSizeRepository fileSizeRepository;
 
     @Override
     public void saveAll(List<FileSize> fileSizeList) {
-        fileSizeRepositorye.saveAll(fileSizeList);
+        fileSizeRepository.saveAll(fileSizeList);
     }
 }

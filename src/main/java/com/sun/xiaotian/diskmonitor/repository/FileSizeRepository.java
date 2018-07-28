@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FileSizeRepository extends JpaRepository<FileSize, Long>, JpaSpecificationExecutor<FileSize> {
+public interface FileSizeRepository extends JpaRepository<FileSize, Integer>, JpaSpecificationExecutor<FileSize> {
 
 }
