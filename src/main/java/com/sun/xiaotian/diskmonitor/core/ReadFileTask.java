@@ -9,7 +9,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +27,8 @@ public class ReadFileTask implements ShuntDownable {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DMThreadFactory.getInstance());
 
+    private final List<CompletableFuture<Void>> readFileTaskList = new ArrayList<>();
+
     private FileInfoExchangeCenter fileInfoExchangeCenter;
 
     private FileRecordDate recordDate;
@@ -38,7 +42,7 @@ public class ReadFileTask implements ShuntDownable {
     void read(File file, FileInfoExchangeCenter fileInfoExchangeCenter) {
         recordDate = oneClassOneCache.get(FileRecordDate.class);
         this.fileInfoExchangeCenter = fileInfoExchangeCenter;
-        CompletableFuture
+        CompletableFuture<Void> completableFuture = CompletableFuture
                 .runAsync(() -> {
                     readAllFileSizeInfo(file);
                     fileInfoExchangeCenter.addFileSize(FileSize.END);
@@ -49,6 +53,7 @@ public class ReadFileTask implements ShuntDownable {
                             return null;
                         }
                 ).thenAccept((v) -> logger.info("success ..."));
+        readFileTaskList.add(completableFuture);
     }
 
     /**
@@ -90,5 +95,17 @@ public class ReadFileTask implements ShuntDownable {
     @Override
     public void shutDown() {
         this.executorService.shutdown();
+    }
+
+    void whenComplete() {
+        CompletableFuture
+                .allOf(readFileTaskList.toArray(new CompletableFuture[0]))
+                .whenComplete((v, e) -> {
+                    if (e != null) {
+                        logger.error(e.getMessage(), e);
+                    } else {
+                        logger.info("read file task finished !");
+                    }
+                });
     }
 }

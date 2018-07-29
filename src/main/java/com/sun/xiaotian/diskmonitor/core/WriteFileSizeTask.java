@@ -9,8 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -24,6 +27,8 @@ public class WriteFileSizeTask implements ShuntDownable {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DMThreadFactory.getInstance());
 
+    private final List<CompletableFuture<Void>> completableFutureList = new ArrayList<>();
+
     private final FileSizeService fileSizeService;
 
     public WriteFileSizeTask(FileSizeService fileSizeService) {
@@ -31,11 +36,11 @@ public class WriteFileSizeTask implements ShuntDownable {
     }
 
     void writeFileSize(List<FileSize> fileSizeList) {
-        CompletableFuture
+        CompletableFuture<Void> completableFuture = CompletableFuture
                 .runAsync(() -> fileSizeService.saveAll(fileSizeList), executorService)
                 .exceptionally(
                         throwable -> {
-                            if(throwable == null) {
+                            if (throwable == null) {
                                 return null;
                             }
                             logger.error(JSON.toJSON(fileSizeList));
@@ -43,10 +48,24 @@ public class WriteFileSizeTask implements ShuntDownable {
                             return null;
                         }
                 );
+        completableFutureList.add(completableFuture);
     }
 
     @Override
     public void shutDown() {
         this.executorService.shutdown();
+    }
+
+    void whenComplete(Runnable runnable) {
+        CompletableFuture
+                .allOf(completableFutureList.toArray(new CompletableFuture[0]))
+                .whenComplete((v, e) -> {
+                    if (e != null) {
+                        logger.error(e.getMessage(), e);
+                    } else {
+                        logger.info("write file task finished !");
+                    }
+                });
+        runnable.run();
     }
 }

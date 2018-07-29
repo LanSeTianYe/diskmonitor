@@ -28,12 +28,14 @@ public class FileInfoExchangeCenter {
 
     private final WriteFileSizeTask writeFileSizeTask;
     private final ReadFileTask readFileTask;
+    private final TaskFinishedTask taskFinishedTask;
 
     private final ThreadLocal<List<FileSize>> threadFileSizeList = new FileSizeListThreadLocal();
 
-    public FileInfoExchangeCenter(WriteFileSizeTask writeFileSizeTask, ReadFileTask readFileTask) {
+    public FileInfoExchangeCenter(WriteFileSizeTask writeFileSizeTask, ReadFileTask readFileTask, TaskFinishedTask taskFinishedTask) {
         this.writeFileSizeTask = writeFileSizeTask;
         this.readFileTask = readFileTask;
+        this.taskFinishedTask = taskFinishedTask;
     }
 
     public void start() {
@@ -63,6 +65,8 @@ public class FileInfoExchangeCenter {
         }
 
         if (fileSize == FileSize.END && ++syncFinishedFileNumber == files.length) {
+            readFileTask.whenComplete();
+            writeFileSizeTask.whenComplete(taskFinishedTask::start);
             finishTask();
         }
     }
