@@ -1,11 +1,6 @@
 package com.sun.xiaotian.diskmonitor.core;
 
-import com.sun.xiaotian.diskmonitor.cache.OneClassOneCache;
-import com.sun.xiaotian.diskmonitor.model.FileCount;
-import com.sun.xiaotian.diskmonitor.model.FileRecordDate;
 import com.sun.xiaotian.diskmonitor.model.FileSize;
-import com.sun.xiaotian.diskmonitor.service.FileRecordDateService;
-import com.sun.xiaotian.diskmonitor.service.FileSizeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,18 +28,12 @@ public class FileInfoExchangeCenter {
 
     private final WriteFileSizeTask writeFileSizeTask;
     private final ReadFileTask readFileTask;
-    private final FileRecordDateService fileRecordDateService;
-    private final OneClassOneCache oneClassOneCache;
-    private final FileSizeService fileSizeService;
 
     private final ThreadLocal<List<FileSize>> threadFileSizeList = new FileSizeListThreadLocal();
 
-    public FileInfoExchangeCenter(WriteFileSizeTask writeFileSizeTask, ReadFileTask readFileTask, FileRecordDateService fileRecordDateService, OneClassOneCache oneClassOneCache, FileSizeService fileSizeService) {
+    public FileInfoExchangeCenter(WriteFileSizeTask writeFileSizeTask, ReadFileTask readFileTask) {
         this.writeFileSizeTask = writeFileSizeTask;
         this.readFileTask = readFileTask;
-        this.fileRecordDateService = fileRecordDateService;
-        this.oneClassOneCache = oneClassOneCache;
-        this.fileSizeService = fileSizeService;
     }
 
     public void start() {
@@ -75,7 +63,6 @@ public class FileInfoExchangeCenter {
         }
 
         if (fileSize == FileSize.END && ++syncFinishedFileNumber == files.length) {
-            updateRecordDate();
             finishTask();
         }
     }
@@ -94,15 +81,5 @@ public class FileInfoExchangeCenter {
 
     private void shutdown(ShuntDownable shuntDownAble) {
         shuntDownAble.shutDown();
-    }
-
-    private void updateRecordDate() {
-        FileRecordDate recordDate = oneClassOneCache.get(FileRecordDate.class);
-        recordDate.setEndDate(new Date());
-        fileRecordDateService.saveOrUpdate(recordDate);
-        long costTime = recordDate.getEndDate().getTime() - recordDate.getStartDate().getTime();
-        logger.info(String.format("task run finished ! cost time: %s ms, record data: %s, ", costTime, recordDate));
-        logger.info(String.format("file count : %s", oneClassOneCache.get(FileCount.class)));
-        logger.info(String.format("add count: %s", fileSizeService.findRecordCount(recordDate.getRecordDate())));
     }
 }

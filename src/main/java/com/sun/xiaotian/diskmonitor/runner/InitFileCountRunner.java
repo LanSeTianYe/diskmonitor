@@ -33,7 +33,7 @@ public class InitFileCountRunner implements CommandLineRunner {
             long startTime = System.currentTimeMillis();
             FileCount fileCount = DiskFileTool.getFileCount();
             fileCount.setRecordDate(oneClassOneCache.get(FileRecordDate.class).getRecordDate());
-            logger.info(String.format("init file count task finished ! cost time: %s ms, fileCount: %s", ((System.currentTimeMillis() - startTime) / 1000), fileCount));
+            logger.info(String.format("init file count task finished ! cost time: %s s, fileCount: %s", ((System.currentTimeMillis() - startTime) / 1000), fileCount));
             fileCount = fileCountService.addOrUpdate(fileCount);
             oneClassOneCache.add(fileCount);
         });
