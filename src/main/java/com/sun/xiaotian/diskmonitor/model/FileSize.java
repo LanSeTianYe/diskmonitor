@@ -14,7 +14,7 @@ import java.util.Date;
 @Table(name = "dm_file_size")
 public class FileSize implements Serializable {
 
-    public final static FileSize END = new FileSize();
+    public final static FileSize END = InnerClass.instance;
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -24,4 +24,13 @@ public class FileSize implements Serializable {
     private String fileAbsolutePath;   //文件绝对路径
     private long fileSize;          //文件大小
     private Date recordDate;        //记录日期
+
+    static class InnerClass {
+        final static FileSize instance = new FileSize();
+        static {
+            instance.setRecordDate(new Date(0));
+            instance.setFileAbsolutePath("");
+            instance.setFileSize(0);
+        }
+    }
 }

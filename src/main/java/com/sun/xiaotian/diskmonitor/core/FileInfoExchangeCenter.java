@@ -62,10 +62,15 @@ public class FileInfoExchangeCenter {
      * @param fileSize 文件大小信息实体
      */
     void addFileSize(FileSize fileSize) {
-        if (threadFileSizeList.get().size() == bathInsertSize || fileSize == FileSize.END) {
+        logger.debug(String.format("file size : %s ", fileSize));
+        if (fileSize == FileSize.END) {
             writeFileSizeTask.writeFileSize(threadFileSizeList.get());
             threadFileSizeList.set(new ArrayList<>(bathInsertSize));
         } else {
+            if (threadFileSizeList.get().size() == bathInsertSize) {
+                writeFileSizeTask.writeFileSize(threadFileSizeList.get());
+                threadFileSizeList.set(new ArrayList<>(bathInsertSize));
+            }
             threadFileSizeList.get().add(fileSize);
         }
 
