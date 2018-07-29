@@ -59,11 +59,11 @@ public class ReadFileTask implements ShuntDownable {
      */
     private long readAllFileSizeInfo(File file) {
         if (file.isDirectory()) {
+            long fileSize = 0;
             File[] files = file.listFiles();
-            if (null == files) {
-                return 0;
+            if (null != files) {
+                fileSize = Arrays.stream(files).mapToLong(this::readAllFileSizeInfo).sum();
             }
-            long fileSize = Arrays.stream(files).mapToLong(this::readAllFileSizeInfo).sum();
             fileInfoExchangeCenter.addFileSize(initFileInfo(file, fileSize));
             return fileSize;
         } else {
