@@ -46,7 +46,7 @@ public class WriteFileSizeTask implements ShuntDownable {
                             }
                             return null;
                         }
-                ).thenAccept(aVoid -> logger.info("write file size success ..."));
+                ).whenComplete((v,t) -> logger.info("write file size success ..."));
         completableFutureList.add(completableFuture);
     }
 
@@ -56,7 +56,11 @@ public class WriteFileSizeTask implements ShuntDownable {
     }
 
     void whenComplete() {
-        CompletableFuture.allOf(completableFutureList.toArray(new CompletableFuture[0])).join();
+        try {
+            CompletableFuture.allOf(completableFutureList.toArray(new CompletableFuture[0])).get();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
         logger.info("all writeFileSizeTask finished ...");
     }
 }

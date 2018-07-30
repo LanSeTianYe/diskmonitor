@@ -9,13 +9,10 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 /**
  * 读取文件信息任务
@@ -27,8 +24,6 @@ public class ReadFileTask implements ShuntDownable {
     private static final Logger logger = LogManager.getLogger(ReadFileTask.class);
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), DMThreadFactory.getInstance());
-
-    private final List<CompletableFuture<Void>> readFileTaskList = new ArrayList<>();
 
     private FileInfoExchangeCenter fileInfoExchangeCenter;
 
@@ -43,18 +38,17 @@ public class ReadFileTask implements ShuntDownable {
     void read(File file, FileInfoExchangeCenter fileInfoExchangeCenter) {
         recordDate = oneClassOneCache.get(FileRecordDate.class);
         this.fileInfoExchangeCenter = fileInfoExchangeCenter;
-        CompletableFuture<Void> completableFuture = CompletableFuture
+        CompletableFuture
                 .runAsync(() -> {
-                    readAllFileSizeInfo(file);
-                    fileInfoExchangeCenter.addFileSize(FileSize.END);
-                }, executorService)
-                .exceptionally(
-                        throwable -> {
-                            logger.error(throwable.getMessage(), throwable);
-                            return null;
-                        }
-                ).thenAccept((v) -> logger.info("read file success ..."));
-        readFileTaskList.add(completableFuture);
+                    try {
+                        logger.info("read file start ..." + file.getAbsolutePath());
+                        readAllFileSizeInfo(file);
+                        logger.info("read file success ..." + file.getAbsolutePath());
+                        fileInfoExchangeCenter.addFileSize(FileSize.END);
+                    } catch (Exception e) {
+                        logger.error("read file exception" + file.getAbsolutePath(), e);
+                    }
+                }, executorService);
     }
 
     /**
@@ -64,6 +58,9 @@ public class ReadFileTask implements ShuntDownable {
      * @return 文件大小
      */
     private long readAllFileSizeInfo(File file) {
+        if (null == file) {
+            return 0;
+        }
         if (file.isDirectory()) {
             long fileSize = 0;
             File[] files = file.listFiles();
@@ -96,10 +93,5 @@ public class ReadFileTask implements ShuntDownable {
     @Override
     public void shutDown() {
         this.executorService.shutdown();
-    }
-
-    void whenComplete() {
-        CompletableFuture.allOf(readFileTaskList.toArray(new CompletableFuture[0])).join();
-        logger.info("all readFileTask finished ...");
     }
 }

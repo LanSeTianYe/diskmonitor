@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 文件信息交换中心
@@ -24,7 +25,7 @@ public class FileInfoExchangeCenter {
 
     private final File[] files = File.listRoots();
 
-    private int syncFinishedFileNumber = 0;
+    private AtomicInteger syncFinishedFileNumber = new AtomicInteger(0);
 
     private final WriteFileSizeTask writeFileSizeTask;
     private final ReadFileTask readFileTask;
@@ -52,7 +53,6 @@ public class FileInfoExchangeCenter {
      * @param fileSize 文件大小信息实体
      */
     void addFileSize(FileSize fileSize) {
-        logger.debug(String.format("file size : %s ", fileSize));
         if (fileSize == FileSize.END) {
             writeFileSizeTask.writeFileSize(threadFileSizeList.get());
             threadFileSizeList.set(new ArrayList<>(bathInsertSize));
@@ -64,9 +64,8 @@ public class FileInfoExchangeCenter {
             threadFileSizeList.get().add(fileSize);
         }
 
-        if (fileSize == FileSize.END && ++syncFinishedFileNumber == files.length) {
+        if (fileSize == FileSize.END && syncFinishedFileNumber.incrementAndGet() == files.length) {
             logger.info("readFileTask and writeFileSizeTask  init success ..");
-            readFileTask.whenComplete();
             writeFileSizeTask.whenComplete();
             taskFinishedTask.start();
             finishTask();

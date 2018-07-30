@@ -1,6 +1,5 @@
 package com.sun.xiaotian.diskmonitor;
 
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,5 +15,4 @@ public class RunServer {
         springApplication.setWebApplicationType(WebApplicationType.NONE);
         springApplication.run(args);
     }
-
 }
