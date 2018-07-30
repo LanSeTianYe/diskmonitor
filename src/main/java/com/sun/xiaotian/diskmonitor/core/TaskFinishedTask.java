@@ -3,6 +3,7 @@ package com.sun.xiaotian.diskmonitor.core;
 import com.sun.xiaotian.diskmonitor.cache.OneClassOneCache;
 import com.sun.xiaotian.diskmonitor.model.FileCount;
 import com.sun.xiaotian.diskmonitor.model.FileRecordDate;
+import com.sun.xiaotian.diskmonitor.service.FileCountService;
 import com.sun.xiaotian.diskmonitor.service.FileRecordDateService;
 import com.sun.xiaotian.diskmonitor.service.FileSizeService;
 import org.apache.logging.log4j.LogManager;
@@ -20,11 +21,13 @@ public class TaskFinishedTask {
     private final OneClassOneCache oneClassOneCache;
     private final FileRecordDateService fileRecordDateService;
     private final FileSizeService fileSizeService;
+    private final FileCountService fileCountService;
 
-    public TaskFinishedTask(OneClassOneCache oneClassOneCache, FileRecordDateService fileRecordDateService, FileSizeService fileSizeService) {
+    public TaskFinishedTask(OneClassOneCache oneClassOneCache, FileRecordDateService fileRecordDateService, FileSizeService fileSizeService, FileCountService fileCountService) {
         this.oneClassOneCache = oneClassOneCache;
         this.fileRecordDateService = fileRecordDateService;
         this.fileSizeService = fileSizeService;
+        this.fileCountService = fileCountService;
     }
 
     void start() {
@@ -32,10 +35,13 @@ public class TaskFinishedTask {
         FileCount fileCount = getFileCount();
         recordDate.setEndDate(new Date());
         fileRecordDateService.saveOrUpdate(recordDate);
+        int actualRecordCount = fileSizeService.findRecordCount(recordDate.getRecordDate());
+        fileCount.setActualCount(actualRecordCount);
+        fileCountService.addOrUpdate(fileCount);
         long costTime = recordDate.getEndDate().getTime() - recordDate.getStartDate().getTime();
         logger.info(String.format("task run finished ! cost time: %s s, record data: %s, ", costTime / 1000, recordDate));
         logger.info(String.format("file count : %s", fileCount));
-        logger.info(String.format("add count: %s", fileSizeService.findRecordCount(recordDate.getRecordDate())));
+        logger.info(String.format("add count: %s", actualRecordCount ));
     }
 
     /**

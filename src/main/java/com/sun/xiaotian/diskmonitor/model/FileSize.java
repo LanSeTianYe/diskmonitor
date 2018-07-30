@@ -1,5 +1,6 @@
 package com.sun.xiaotian.diskmonitor.model;
 
+import com.sun.xiaotian.diskmonitor.annotation.FiledMeaning;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -19,11 +20,18 @@ public class FileSize implements Serializable {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(nullable = false)
-    private Integer fileSizeId;        //文件大小ID
+    @FiledMeaning("文件大小ID")
+    private Integer fileSizeId;
+
     @Column(length = 500)
-    private String fileAbsolutePath;   //文件绝对路径
-    private long fileSize;          //文件大小
-    private Date recordDate;        //记录日期
+    @FiledMeaning("文件绝对路径")
+    private String fileAbsolutePath;
+
+    @FiledMeaning("文件大小")
+    private long fileSize;
+
+    @FiledMeaning("记录日期")
+    private Date recordDate;
 
     static class InnerClass {
         final static FileSize instance = new FileSize();

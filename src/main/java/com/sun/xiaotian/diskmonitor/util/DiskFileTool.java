@@ -21,11 +21,12 @@ public class DiskFileTool {
 
     /**
      * 遍历计算文件数量
-     * @param file
-     * @param fileCount
+     *
+     * @param file      文件名字
+     * @param fileCount 文件数量记录实体
      */
     private static void calculateFileCount(File file, FileCount fileCount) {
-        if(null != file) {
+        if (null != file) {
             if (file.isFile()) {
                 fileCount.addOneFile();
             } else if (file.isDirectory()) {

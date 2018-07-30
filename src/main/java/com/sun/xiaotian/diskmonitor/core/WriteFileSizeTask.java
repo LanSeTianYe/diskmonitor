@@ -40,14 +40,13 @@ public class WriteFileSizeTask implements ShuntDownable {
                 .runAsync(() -> fileSizeService.saveAll(fileSizeList), executorService)
                 .exceptionally(
                         throwable -> {
-                            if (throwable == null) {
-                                return null;
+                            if (throwable != null) {
+                                logger.error(JSON.toJSON(fileSizeList));
+                                logger.error(throwable.getMessage(), throwable);
                             }
-                            logger.error(JSON.toJSON(fileSizeList));
-                            logger.error(throwable.getMessage(), throwable);
                             return null;
                         }
-                );
+                ).thenAccept(aVoid -> logger.info("write file size success ..."));
         completableFutureList.add(completableFuture);
     }
 
@@ -56,16 +55,8 @@ public class WriteFileSizeTask implements ShuntDownable {
         this.executorService.shutdown();
     }
 
-    void whenComplete(Runnable runnable) {
-        CompletableFuture
-                .allOf(completableFutureList.toArray(new CompletableFuture[0]))
-                .whenComplete((v, e) -> {
-                    if (e != null) {
-                        logger.error(e.getMessage(), e);
-                    } else {
-                        logger.info("write file task finished !");
-                    }
-                });
-        runnable.run();
+    void whenComplete() {
+        CompletableFuture.allOf(completableFutureList.toArray(new CompletableFuture[0])).join();
+        logger.info("all writeFileSizeTask finished ...");
     }
 }

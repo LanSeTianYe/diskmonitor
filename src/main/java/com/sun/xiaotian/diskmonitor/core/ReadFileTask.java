@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * 读取文件信息任务
@@ -52,7 +53,7 @@ public class ReadFileTask implements ShuntDownable {
                             logger.error(throwable.getMessage(), throwable);
                             return null;
                         }
-                ).thenAccept((v) -> logger.info("success ..."));
+                ).thenAccept((v) -> logger.info("read file success ..."));
         readFileTaskList.add(completableFuture);
     }
 
@@ -98,14 +99,7 @@ public class ReadFileTask implements ShuntDownable {
     }
 
     void whenComplete() {
-        CompletableFuture
-                .allOf(readFileTaskList.toArray(new CompletableFuture[0]))
-                .whenComplete((v, e) -> {
-                    if (e != null) {
-                        logger.error(e.getMessage(), e);
-                    } else {
-                        logger.info("read file task finished !");
-                    }
-                });
+        CompletableFuture.allOf(readFileTaskList.toArray(new CompletableFuture[0])).join();
+        logger.info("all readFileTask finished ...");
     }
 }

@@ -65,8 +65,10 @@ public class FileInfoExchangeCenter {
         }
 
         if (fileSize == FileSize.END && ++syncFinishedFileNumber == files.length) {
+            logger.info("readFileTask and writeFileSizeTask  init success ..");
             readFileTask.whenComplete();
-            writeFileSizeTask.whenComplete(taskFinishedTask::start);
+            writeFileSizeTask.whenComplete();
+            taskFinishedTask.start();
             finishTask();
         }
     }
